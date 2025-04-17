@@ -95,17 +95,26 @@ describe("🚩 Challenge 3: 🎲 Dice Game", function () {
 
   describe("🔑 Rigged Rolls", function () {
     it("Should call diceGame.rollTheDice for a roll <= 5", async () => {
-      const getRollLessThanFive = true;
-      const expectedRoll = await getRoll(getRollLessThanFive);
-      console.log("\t", "🎲 Expect roll to be less than or equal to 5. Dice Game Roll:", Number(expectedRoll));
+        const getRollLessThanFive = true;
+        const expectedRoll = await getRoll(getRollLessThanFive);
+        console.log("\t", "🎲 Expect roll to be less than or equal to 5. Dice Game Roll:", Number(expectedRoll));
 
-      const tx = await riggedRoll.riggedRoll();
-      const riggedRollAddress = await riggedRoll.getAddress();
+        // Fund the contract
+        const betAmount = ethers.parseEther("0.002"); // Match the hardcoded value
+        await ethers.provider.send("hardhat_setBalance", [
+            await riggedRoll.getAddress(),
+            ethers.toBeHex(betAmount)
+        ]);
 
-      await expect(tx).to.emit(diceGame, "Roll").withArgs(riggedRollAddress, rollAmount, expectedRoll);
-      await expect(tx).to.emit(diceGame, "Winner");
+        const tx = await riggedRoll.riggedRoll(); // No value sent
+        const riggedRollAddress = await riggedRoll.getAddress();
+
+        await expect(tx)
+            .to.emit(diceGame, "Roll")
+            .withArgs(riggedRollAddress, betAmount, expectedRoll);
+        await expect(tx).to.emit(diceGame, "Winner");
     });
-
+    
     it("Should not call diceGame.rollTheDice for a roll > 5", async () => {
       const getRollLessThanFive = false;
       const expectedRoll = await getRoll(getRollLessThanFive);
